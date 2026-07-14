@@ -1,0 +1,49 @@
+name: litera-ai
+
+services:
+  postgres:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: litera_ai
+      POSTGRES_USER: litera
+      POSTGRES_PASSWORD: litera
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U litera -d litera_ai"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  redis:
+    image: redis:8
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build:
+      context: ../../
+      dockerfile: infra/docker/backend.Dockerfile
+    environment:
+      APP_ENV: development
+      POSTGRES_DSN: postgresql+psycopg://litera:litera@postgres:5432/litera_ai
+      REDIS_URL: redis://redis:6379/0
+      JWT_SECRET: change-me-in-production
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+
+volumes:
+  postgres_data:
+

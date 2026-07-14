@@ -1,0 +1,50 @@
+name: litera_ai_mobile
+description: LITERA-AI mobile application for Android and iOS.
+publish_to: "none"
+version: 0.1.0+1
+
+environment:
+  sdk: ">=3.5.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  cached_network_image: any
+  cupertino_icons: any
+  dio: any
+  flutter_local_notifications: any
+  flutter_riverpod: any
+  flutter_secure_storage: any
+  freezed_annotation: any
+  go_router: any
+  hive: any
+  hive_flutter: any
+  isar: any
+  isar_flutter_libs: any
+  json_annotation: any
+  path_provider: any
+  flutter_svg: ^2.3.0
+  intl: any
+  google_sign_in: ^6.2.1
+  video_player: ^2.8.2
+  image_picker: ^1.2.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  build_runner: any
+  flutter_gen_runner: any
+  flutter_lints: any
+  freezed: any
+  json_serializable: any
+  very_good_analysis: any
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
+    - assets/icons/
+    - assets/videos/
+

@@ -1,0 +1,1098 @@
+openapi: 3.1.0
+info:
+  title: LITERA-AI API
+  version: 1.0.0
+  summary: REST and WebSocket contract for the LITERA-AI mobile application.
+  description: >
+    API v1 for auth, diagnostic assessment, adaptive learning, quiz, teacher
+    dashboard, offline sync, notification devices, and AI result retrieval.
+servers:
+  - url: https://api.litera-ai.example.com/v1
+    description: Production placeholder
+  - url: https://staging-api.litera-ai.example.com/v1
+    description: Staging placeholder
+security:
+  - bearerAuth: []
+tags:
+  - name: Health
+  - name: Auth
+  - name: Profile
+  - name: Assessment
+  - name: Learning
+  - name: Quiz
+  - name: Teacher
+  - name: Sync
+  - name: Notifications
+  - name: AI
+paths:
+  /health:
+    get:
+      tags: [Health]
+      security: []
+      summary: Health check
+      responses:
+        "200":
+          description: Service is healthy.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthResponse"
+
+  /auth/register:
+    post:
+      tags: [Auth]
+      security: []
+      summary: Register a new user and send email OTP.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RegisterRequest"
+      responses:
+        "201":
+          description: User registered.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthBootstrapResponse"
+        "409":
+          $ref: "#/components/responses/Conflict"
+        "422":
+          $ref: "#/components/responses/ValidationError"
+
+  /auth/login:
+    post:
+      tags: [Auth]
+      security: []
+      summary: Login with email and password.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/LoginRequest"
+      responses:
+        "200":
+          description: Login successful.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthTokenResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /auth/verify-email:
+    post:
+      tags: [Auth]
+      summary: Verify email OTP.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/VerifyEmailRequest"
+      responses:
+        "200":
+          description: Email verified.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserEnvelope"
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+  /auth/resend-otp:
+    post:
+      tags: [Auth]
+      summary: Resend email verification OTP.
+      responses:
+        "202":
+          description: OTP queued.
+        "429":
+          $ref: "#/components/responses/RateLimited"
+
+  /auth/refresh:
+    post:
+      tags: [Auth]
+      security: []
+      summary: Rotate refresh token and return a new access token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RefreshTokenRequest"
+      responses:
+        "200":
+          description: Token refreshed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AuthTokenResponse"
+        "401":
+          $ref: "#/components/responses/Unauthorized"
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Revoke current refresh token family.
+      responses:
+        "204":
+          description: Logged out.
+
+  /me:
+    get:
+      tags: [Profile]
+      summary: Get current user and profile completion state.
+      responses:
+        "200":
+          description: Current user.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserEnvelope"
+
+  /profiles/complete:
+    put:
+      tags: [Profile]
+      summary: Complete student or teacher profile.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              oneOf:
+                - $ref: "#/components/schemas/CompleteStudentProfileRequest"
+                - $ref: "#/components/schemas/CompleteTeacherProfileRequest"
+      responses:
+        "200":
+          description: Profile completed.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/UserEnvelope"
+
+  /assessments/diagnostic-sessions:
+    post:
+      tags: [Assessment]
+      summary: Start or resume diagnostic assessment.
+      responses:
+        "201":
+          description: Diagnostic session.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiagnosticSession"
+
+  /assessments/diagnostic-sessions/{sessionId}/answers:
+    post:
+      tags: [Assessment]
+      summary: Save one diagnostic answer.
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AnswerRequest"
+      responses:
+        "202":
+          description: Answer accepted.
+
+  /assessments/diagnostic-sessions/{sessionId}/submit:
+    post:
+      tags: [Assessment]
+      summary: Submit diagnostic session and trigger classification.
+      parameters:
+        - $ref: "#/components/parameters/SessionId"
+      responses:
+        "200":
+          description: Diagnostic result and learning path.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/DiagnosticSubmitResponse"
+
+  /learning-paths/current:
+    get:
+      tags: [Learning]
+      summary: Get current student learning path.
+      responses:
+        "200":
+          description: Current learning path.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/LearningPath"
+        "404":
+          $ref: "#/components/responses/NotFound"
+
+  /modules:
+    get:
+      tags: [Learning]
+      summary: List modules with pagination.
+      parameters:
+        - $ref: "#/components/parameters/Page"
+        - $ref: "#/components/parameters/PageSize"
+        - name: conceptId
+          in: query
+          schema:
+            type: string
+            format: uuid
+        - name: difficulty
+          in: query
+          schema:
+            $ref: "#/components/schemas/Difficulty"
+      responses:
+        "200":
+          description: Module page.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ModulePage"
+
+  /modules/{moduleId}:
+    get:
+      tags: [Learning]
+      summary: Get module content.
+      parameters:
+        - $ref: "#/components/parameters/ModuleId"
+      responses:
+        "200":
+          description: Module detail.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ModuleDetail"
+
+  /modules/{moduleId}/progress:
+    put:
+      tags: [Learning]
+      summary: Update module progress.
+      parameters:
+        - $ref: "#/components/parameters/ModuleId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/ModuleProgressRequest"
+      responses:
+        "200":
+          description: Progress updated.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ModuleProgress"
+
+  /quizzes:
+    post:
+      tags: [Quiz]
+      summary: Start adaptive quiz for a module.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/StartQuizRequest"
+      responses:
+        "201":
+          description: Quiz started.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuizSession"
+
+  /quizzes/{quizSessionId}/answers:
+    post:
+      tags: [Quiz]
+      summary: Save one quiz answer.
+      parameters:
+        - $ref: "#/components/parameters/QuizSessionId"
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/AnswerRequest"
+      responses:
+        "202":
+          description: Answer accepted.
+
+  /quizzes/{quizSessionId}/submit:
+    post:
+      tags: [Quiz]
+      summary: Submit quiz and update knowledge tracing and DDA.
+      parameters:
+        - $ref: "#/components/parameters/QuizSessionId"
+      responses:
+        "200":
+          description: Quiz evaluation.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/QuizSubmitResponse"
+
+  /ai/profile:
+    get:
+      tags: [AI]
+      summary: Get latest AI student profile and model metadata.
+      responses:
+        "200":
+          description: AI profile.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/AiProfile"
+
+  /teacher/classrooms:
+    get:
+      tags: [Teacher]
+      summary: List teacher classrooms.
+      responses:
+        "200":
+          description: Classroom list.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Classroom"
+
+  /teacher/classrooms/{classroomId}/progress:
+    get:
+      tags: [Teacher]
+      summary: Get classroom progress dashboard.
+      parameters:
+        - $ref: "#/components/parameters/ClassroomId"
+      responses:
+        "200":
+          description: Classroom progress.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ClassroomProgress"
+
+  /teacher/students/{studentId}/interventions:
+    get:
+      tags: [Teacher]
+      summary: Get recommended interventions for a student.
+      parameters:
+        - $ref: "#/components/parameters/StudentId"
+      responses:
+        "200":
+          description: Interventions.
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/InterventionRecommendation"
+
+  /sync/pull:
+    get:
+      tags: [Sync]
+      summary: Pull server changes after a checkpoint.
+      parameters:
+        - name: since
+          in: query
+          schema:
+            type: string
+            format: date-time
+      responses:
+        "200":
+          description: Sync delta.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncPullResponse"
+
+  /sync/push:
+    post:
+      tags: [Sync]
+      summary: Push offline outbox events.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/SyncPushRequest"
+      responses:
+        "200":
+          description: Sync result.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SyncPushResponse"
+
+  /notification-devices:
+    post:
+      tags: [Notifications]
+      summary: Register or update FCM device token.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/DeviceTokenRequest"
+      responses:
+        "204":
+          description: Device token saved.
+
+  /ws/teacher-progress:
+    get:
+      tags: [Teacher]
+      summary: WebSocket endpoint for live classroom progress updates.
+      description: >
+        Connect with bearer token using the WebSocket protocol. This path is
+        documented for contract visibility; OpenAPI tooling may not execute it.
+      responses:
+        "101":
+          description: WebSocket upgrade.
+
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+
+  parameters:
+    Page:
+      name: page
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        default: 1
+    PageSize:
+      name: pageSize
+      in: query
+      schema:
+        type: integer
+        minimum: 1
+        maximum: 50
+        default: 20
+    SessionId:
+      name: sessionId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    ModuleId:
+      name: moduleId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    QuizSessionId:
+      name: quizSessionId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    ClassroomId:
+      name: classroomId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+    StudentId:
+      name: studentId
+      in: path
+      required: true
+      schema:
+        type: string
+        format: uuid
+
+  responses:
+    Unauthorized:
+      description: Authentication failed or token expired.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    NotFound:
+      description: Resource not found.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    Conflict:
+      description: Resource conflict.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    RateLimited:
+      description: Too many requests.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+    ValidationError:
+      description: Validation failed.
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/ErrorResponse"
+
+  schemas:
+    HealthResponse:
+      type: object
+      required: [status, timestamp]
+      properties:
+        status:
+          type: string
+          example: ok
+        timestamp:
+          type: string
+          format: date-time
+
+    ErrorResponse:
+      type: object
+      required: [code, message, requestId]
+      properties:
+        code:
+          type: string
+        message:
+          type: string
+        requestId:
+          type: string
+        details:
+          type: object
+          additionalProperties: true
+
+    UserRole:
+      type: string
+      enum: [student, teacher, admin]
+
+    Difficulty:
+      type: string
+      enum: [foundation, easy, medium, hard, advanced]
+
+    RegisterRequest:
+      type: object
+      required: [email, password, role]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          minLength: 10
+        role:
+          $ref: "#/components/schemas/UserRole"
+        fullName:
+          type: string
+          minLength: 2
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+
+    VerifyEmailRequest:
+      type: object
+      required: [otp]
+      properties:
+        otp:
+          type: string
+          minLength: 6
+          maxLength: 6
+
+    RefreshTokenRequest:
+      type: object
+      required: [refreshToken]
+      properties:
+        refreshToken:
+          type: string
+
+    AuthBootstrapResponse:
+      type: object
+      required: [user, requiresEmailVerification]
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+        requiresEmailVerification:
+          type: boolean
+
+    AuthTokenResponse:
+      type: object
+      required: [accessToken, refreshToken, expiresIn, user]
+      properties:
+        accessToken:
+          type: string
+        refreshToken:
+          type: string
+        expiresIn:
+          type: integer
+          example: 900
+        user:
+          $ref: "#/components/schemas/User"
+
+    UserEnvelope:
+      type: object
+      required: [user]
+      properties:
+        user:
+          $ref: "#/components/schemas/User"
+
+    User:
+      type: object
+      required: [id, email, role, emailVerified, profileCompleted]
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        role:
+          $ref: "#/components/schemas/UserRole"
+        fullName:
+          type: string
+        emailVerified:
+          type: boolean
+        profileCompleted:
+          type: boolean
+
+    CompleteStudentProfileRequest:
+      type: object
+      required: [profileType, gradeLevel]
+      properties:
+        profileType:
+          const: student
+        gradeLevel:
+          type: string
+          example: SMP-8
+        schoolId:
+          type: string
+          format: uuid
+        learningPreference:
+          type: string
+          enum: [visual, textual, balanced]
+
+    CompleteTeacherProfileRequest:
+      type: object
+      required: [profileType, schoolId, subjectArea]
+      properties:
+        profileType:
+          const: teacher
+        schoolId:
+          type: string
+          format: uuid
+        subjectArea:
+          type: string
+          enum: [language, mathematics, science, mixed]
+
+    DiagnosticSession:
+      type: object
+      required: [id, status, questions]
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [in_progress, submitted, evaluated]
+        questions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Question"
+
+    Question:
+      type: object
+      required: [id, conceptId, difficulty, stem, options]
+      properties:
+        id:
+          type: string
+          format: uuid
+        conceptId:
+          type: string
+          format: uuid
+        difficulty:
+          $ref: "#/components/schemas/Difficulty"
+        stem:
+          type: string
+        options:
+          type: array
+          items:
+            $ref: "#/components/schemas/QuestionOption"
+
+    QuestionOption:
+      type: object
+      required: [id, label, body]
+      properties:
+        id:
+          type: string
+          format: uuid
+        label:
+          type: string
+        body:
+          type: string
+
+    AnswerRequest:
+      type: object
+      required: [questionId, selectedOptionId, responseTimeMs, idempotencyKey]
+      properties:
+        questionId:
+          type: string
+          format: uuid
+        selectedOptionId:
+          type: string
+          format: uuid
+        responseTimeMs:
+          type: integer
+          minimum: 0
+        idempotencyKey:
+          type: string
+
+    DiagnosticSubmitResponse:
+      type: object
+      required: [result, learningPath]
+      properties:
+        result:
+          $ref: "#/components/schemas/AiProfile"
+        learningPath:
+          $ref: "#/components/schemas/LearningPath"
+
+    AiProfile:
+      type: object
+      required: [literacyProfile, numeracyProfile, confidence, modelVersion]
+      properties:
+        literacyProfile:
+          type: string
+          enum: [mechanical_reader, developing_reader, critical_reader]
+        numeracyProfile:
+          type: string
+          enum: [procedural, transitional, logical_contextual]
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+        modelVersion:
+          type: string
+        generatedAt:
+          type: string
+          format: date-time
+
+    LearningPath:
+      type: object
+      required: [id, status, items]
+      properties:
+        id:
+          type: string
+          format: uuid
+        status:
+          type: string
+          enum: [active, completed, archived]
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/LearningPathItem"
+
+    LearningPathItem:
+      type: object
+      required: [id, conceptId, moduleId, title, targetDifficulty, status]
+      properties:
+        id:
+          type: string
+          format: uuid
+        conceptId:
+          type: string
+          format: uuid
+        moduleId:
+          type: string
+          format: uuid
+        title:
+          type: string
+        targetDifficulty:
+          $ref: "#/components/schemas/Difficulty"
+        status:
+          type: string
+          enum: [locked, available, in_progress, completed]
+
+    ModulePage:
+      type: object
+      required: [items, page, pageSize, total]
+      properties:
+        items:
+          type: array
+          items:
+            $ref: "#/components/schemas/ModuleSummary"
+        page:
+          type: integer
+        pageSize:
+          type: integer
+        total:
+          type: integer
+
+    ModuleSummary:
+      type: object
+      required: [id, title, difficulty, estimatedMinutes]
+      properties:
+        id:
+          type: string
+          format: uuid
+        title:
+          type: string
+        difficulty:
+          $ref: "#/components/schemas/Difficulty"
+        estimatedMinutes:
+          type: integer
+
+    ModuleDetail:
+      allOf:
+        - $ref: "#/components/schemas/ModuleSummary"
+        - type: object
+          required: [contents]
+          properties:
+            contents:
+              type: array
+              items:
+                $ref: "#/components/schemas/ModuleContent"
+
+    ModuleContent:
+      type: object
+      required: [id, contentType, sortOrder, body]
+      properties:
+        id:
+          type: string
+          format: uuid
+        contentType:
+          type: string
+          enum: [text, image, example, checkpoint]
+        sortOrder:
+          type: integer
+        body:
+          type: object
+          additionalProperties: true
+        assetUrl:
+          type: string
+          format: uri
+
+    ModuleProgressRequest:
+      type: object
+      required: [status, progressPercent, idempotencyKey]
+      properties:
+        status:
+          type: string
+          enum: [not_started, in_progress, completed]
+        progressPercent:
+          type: integer
+          minimum: 0
+          maximum: 100
+        idempotencyKey:
+          type: string
+
+    ModuleProgress:
+      type: object
+      required: [moduleId, status, progressPercent]
+      properties:
+        moduleId:
+          type: string
+          format: uuid
+        status:
+          type: string
+        progressPercent:
+          type: integer
+
+    StartQuizRequest:
+      type: object
+      required: [moduleId]
+      properties:
+        moduleId:
+          type: string
+          format: uuid
+
+    QuizSession:
+      type: object
+      required: [id, moduleId, difficulty, questions]
+      properties:
+        id:
+          type: string
+          format: uuid
+        moduleId:
+          type: string
+          format: uuid
+        difficulty:
+          $ref: "#/components/schemas/Difficulty"
+        questions:
+          type: array
+          items:
+            $ref: "#/components/schemas/Question"
+
+    QuizSubmitResponse:
+      type: object
+      required: [score, mastery, ddaDecision]
+      properties:
+        score:
+          type: number
+        mastery:
+          type: array
+          items:
+            $ref: "#/components/schemas/ConceptMastery"
+        ddaDecision:
+          $ref: "#/components/schemas/DdaDecision"
+
+    ConceptMastery:
+      type: object
+      required: [conceptId, masteryProbability, confidence]
+      properties:
+        conceptId:
+          type: string
+          format: uuid
+        masteryProbability:
+          type: number
+          minimum: 0
+          maximum: 1
+        confidence:
+          type: number
+          minimum: 0
+          maximum: 1
+
+    DdaDecision:
+      type: object
+      required: [previousDifficulty, nextDifficulty, reasonCode]
+      properties:
+        previousDifficulty:
+          $ref: "#/components/schemas/Difficulty"
+        nextDifficulty:
+          $ref: "#/components/schemas/Difficulty"
+        reasonCode:
+          type: string
+          enum: [increase, decrease, keep, remediate]
+        explanation:
+          type: string
+
+    Classroom:
+      type: object
+      required: [id, name, academicYear]
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        academicYear:
+          type: string
+
+    ClassroomProgress:
+      type: object
+      required: [classroomId, students]
+      properties:
+        classroomId:
+          type: string
+          format: uuid
+        students:
+          type: array
+          items:
+            $ref: "#/components/schemas/StudentProgressSummary"
+
+    StudentProgressSummary:
+      type: object
+      required: [studentId, fullName, averageMastery, riskLevel]
+      properties:
+        studentId:
+          type: string
+          format: uuid
+        fullName:
+          type: string
+        averageMastery:
+          type: number
+        riskLevel:
+          type: string
+          enum: [low, medium, high]
+
+    InterventionRecommendation:
+      type: object
+      required: [id, studentId, priority, recommendationType, rationale]
+      properties:
+        id:
+          type: string
+          format: uuid
+        studentId:
+          type: string
+          format: uuid
+        priority:
+          type: string
+          enum: [low, medium, high]
+        recommendationType:
+          type: string
+          enum: [remedial_reading, numeracy_context, teacher_check_in, peer_discussion]
+        rationale:
+          type: string
+
+    SyncPullResponse:
+      type: object
+      required: [checkpoint, changes]
+      properties:
+        checkpoint:
+          type: string
+          format: date-time
+        changes:
+          type: array
+          items:
+            type: object
+            additionalProperties: true
+
+    SyncPushRequest:
+      type: object
+      required: [events]
+      properties:
+        events:
+          type: array
+          items:
+            $ref: "#/components/schemas/SyncEvent"
+
+    SyncEvent:
+      type: object
+      required: [idempotencyKey, eventType, payload, occurredAt]
+      properties:
+        idempotencyKey:
+          type: string
+        eventType:
+          type: string
+        payload:
+          type: object
+          additionalProperties: true
+        occurredAt:
+          type: string
+          format: date-time
+
+    SyncPushResponse:
+      type: object
+      required: [accepted, rejected]
+      properties:
+        accepted:
+          type: array
+          items:
+            type: string
+        rejected:
+          type: array
+          items:
+            $ref: "#/components/schemas/ErrorResponse"
+
+    DeviceTokenRequest:
+      type: object
+      required: [token, platform]
+      properties:
+        token:
+          type: string
+        platform:
+          type: string
+          enum: [android, ios]
+        appVersion:
+          type: string

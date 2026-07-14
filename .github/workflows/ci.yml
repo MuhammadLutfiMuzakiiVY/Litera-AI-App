@@ -1,0 +1,42 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  backend-static:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install backend
+        run: |
+          cd apps/backend
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
+      - name: Ruff
+        run: |
+          cd apps/backend
+          ruff check app tests
+      - name: Tests
+        run: |
+          cd apps/backend
+          PYTHONPATH=../.. pytest
+
+  mobile-static:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+      - name: Flutter checks
+        run: |
+          cd apps/mobile
+          flutter pub get
+          flutter analyze
+          flutter test

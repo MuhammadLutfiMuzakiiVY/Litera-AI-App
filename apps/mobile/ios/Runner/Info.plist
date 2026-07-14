@@ -1,0 +1,122 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CADisableMinimumFrameDurationOnPhone</key>
+	<true/>
+	
+	<!-- Deep Linking / Custom Schemes -->
+	<key>CFBundleURLTypes</key>
+	<array>
+		<dict>
+			<key>CFBundleTypeRole</key>
+			<string>Editor</string>
+			<key>CFBundleURLName</key>
+			<string>litera-ai.com</string>
+			<key>CFBundleURLSchemes</key>
+			<array>
+				<string>litera-ai</string>
+			</array>
+		</dict>
+	</array>
+
+	<!-- Permissions Descriptions -->
+	<key>NSCameraUsageDescription</key>
+	<string>Aplikasi memerlukan akses kamera untuk pemindaian kode QR dan penyerahan tugas belajar.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>Aplikasi memerlukan akses mikrofon untuk asisten membaca suara AI dan rekaman pelafalan kata.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Aplikasi memerlukan akses galeri foto untuk mengunggah tugas dan mengganti foto profil.</string>
+	<key>NSPhotoLibraryAddUsageDescription</key>
+	<string>Aplikasi memerlukan izin menyimpan hasil belajar dan grafik evaluasi ke galeri foto Anda.</string>
+	<key>NSFaceIDUsageDescription</key>
+	<string>Aplikasi memerlukan Face ID untuk masuk ke akun Anda secara aman.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>Aplikasi memerlukan akses lokasi saat digunakan untuk keperluan presensi dan absensi kelas.</string>
+	<key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+	<string>Aplikasi memerlukan akses lokasi setiap saat (termasuk di latar belakang) untuk presensi otomatis dan absensi kelas.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>Aplikasi memerlukan akses lokasi di latar belakang untuk mendeteksi kehadiran secara otomatis.</string>
+	
+	<!-- Background Modes -->
+	<key>UIBackgroundModes</key>
+	<array>
+		<string>location</string>
+	</array>
+
+	<key>NSBluetoothAlwaysUsageDescription</key>
+	<string>Aplikasi memerlukan akses Bluetooth untuk terhubung ke perangkat bantu belajar terdekat.</string>
+	<key>NSBluetoothPeripheralUsageDescription</key>
+	<string>Aplikasi memerlukan akses Bluetooth peripheral untuk terhubung ke perangkat belajar terdekat.</string>
+	<key>NFCReaderUsageDescription</key>
+	<string>Aplikasi memerlukan akses NFC untuk memindai kartu pelajar digital Anda.</string>
+	<key>NSCalendarsUsageDescription</key>
+	<string>Aplikasi memerlukan akses kalender untuk menambahkan pengingat jadwal belajar dan kelas.</string>
+	<key>NSRemindersUsageDescription</key>
+	<string>Aplikasi memerlukan akses pengingat untuk notifikasi tugas dan evaluasi belajar.</string>
+	<key>NSContactsUsageDescription</key>
+	<string>Aplikasi memerlukan akses ke kontak Anda untuk mengundang teman belajar.</string>
+	<key>CFBundleDevelopmentRegion</key>
+	<string>$(DEVELOPMENT_LANGUAGE)</string>
+	<key>CFBundleDisplayName</key>
+	<string>Litera AI</string>
+	<key>CFBundleExecutable</key>
+	<string>$(EXECUTABLE_NAME)</string>
+	<key>CFBundleIdentifier</key>
+	<string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+	<key>CFBundleInfoDictionaryVersion</key>
+	<string>6.0</string>
+	<key>CFBundleName</key>
+	<string>Litera AI</string>
+	<key>CFBundlePackageType</key>
+	<string>APPL</string>
+	<key>CFBundleShortVersionString</key>
+	<string>$(FLUTTER_BUILD_NAME)</string>
+	<key>CFBundleSignature</key>
+	<string>????</string>
+	<key>CFBundleVersion</key>
+	<string>$(FLUTTER_BUILD_NUMBER)</string>
+	<key>LSRequiresIPhoneOS</key>
+	<true/>
+	<key>UIApplicationSceneManifest</key>
+	<dict>
+		<key>UIApplicationSupportsMultipleScenes</key>
+		<false/>
+		<key>UISceneConfigurations</key>
+		<dict>
+			<key>UIWindowSceneSessionRoleApplication</key>
+			<array>
+				<dict>
+					<key>UISceneClassName</key>
+					<string>UIWindowScene</string>
+					<key>UISceneConfigurationName</key>
+					<string>flutter</string>
+					<key>UISceneDelegateClassName</key>
+					<string>$(PRODUCT_MODULE_NAME).SceneDelegate</string>
+					<key>UISceneStoryboardFile</key>
+					<string>Main</string>
+				</dict>
+			</array>
+		</dict>
+	</dict>
+	<key>UIApplicationSupportsIndirectInputEvents</key>
+	<true/>
+	<key>UILaunchStoryboardName</key>
+	<string>LaunchScreen</string>
+	<key>UIMainStoryboardFile</key>
+	<string>Main</string>
+	<key>UISupportedInterfaceOrientations</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+	<key>UISupportedInterfaceOrientations~ipad</key>
+	<array>
+		<string>UIInterfaceOrientationPortrait</string>
+		<string>UIInterfaceOrientationPortraitUpsideDown</string>
+		<string>UIInterfaceOrientationLandscapeLeft</string>
+		<string>UIInterfaceOrientationLandscapeRight</string>
+	</array>
+</dict>
+</plist>

@@ -1,0 +1,33 @@
+[project]
+name = "litera-ai-backend"
+version = "0.1.0"
+description = "FastAPI backend for LITERA-AI."
+requires-python = ">=3.13"
+dependencies = [
+  "alembic>=1.16",
+  "fastapi>=0.139",
+  "httpx>=0.28",
+  "passlib[bcrypt]>=1.7",
+  "psycopg[binary]>=3.2",
+  "pydantic>=2.11",
+  "pyjwt>=2.10",
+  "python-multipart>=0.0.20",
+  "redis>=6.2",
+  "sqlalchemy>=2.0",
+  "uvicorn[standard]>=0.35",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8.4",
+  "pytest-asyncio>=1.0",
+  "ruff>=0.12",
+]
+
+[tool.ruff]
+line-length = 88
+target-version = "py313"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "SIM"]
+
