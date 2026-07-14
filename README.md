@@ -1,7 +1,7 @@
 # 📱 Litera-AI Monorepo (Mobile Client, Backend API, & AI Services)
 
 <p align="center">
-  <img src="apps/mobile/assets/images/logo.png" alt="Litera-AI Logo" width="120" height="120" />
+  <img src="apps/mobile/assets/images/logo.png" alt="Litera-AI Logo" width="140" height="140" />
 </p>
 
 [![Flutter](https://img.shields.io/badge/Flutter-3.x-blue?style=for-the-badge&logo=flutter)](https://flutter.dev/)
@@ -13,31 +13,126 @@
 
 ---
 
-## 📖 Deskripsi Proyek (Project Description)
+## 📖 1. Latar Belakang & Gambaran Umum (Background & Overview)
 
-**LITERA-AI App** adalah repositori monorepo utama yang mengintegrasikan seluruh layanan klien seluler (mobile client), layanan backend server, serta model kecerdasan buatan (predictive AI) dalam ekosistem **LITERA-AI (Literacy Intelligent Assistant)**. Proyek ini dikembangkan secara komprehensif untuk menyukseskan program **P-LIDM (Platform Inovasi Teknologi AI dengan Asesmen Diagnostik Adaptif)**.
+**LITERA-AI Monorepo** adalah pusat pengembangan kode terpadu yang memuat seluruh infrastruktur aplikasi seluler (mobile client), layanan backend server, serta mesin kecerdasan buatan (predictive AI engine) dalam ekosistem **LITERA-AI (Literacy Intelligent Assistant)**. Monorepo ini dirancang khusus guna menyukseskan program **P-LIDM (Platform Inovasi Teknologi AI dengan Asesmen Diagnostik Adaptif)** untuk pemulihan kecakapan literasi membaca tingkat nasional.
 
-Monorepo ini menggabungkan tiga pilar teknologi utama:
-1. **Aplikasi Mobile (Flutter)**: Aplikasi seluler lintas platform (Android & iOS) yang menjadi media utama interaksi siswa dalam melakukan asesmen diagnostik, membaca karya sastra klasik, dan mengerjakan latihan menulis kreatif.
-2. **Backend Server (FastAPI)**: Server API asinkron berperforma tinggi yang memproses logika autentikasi, sinkronisasi data luar jaringan (offline synchronization), pengumpulan data keaktifan siswa, dan interaksi basis data.
-3. **AI Inference & Decision Engine (Python)**: Modul analitik cerdas yang mengimplementasikan metode *Knowledge Tracing* dan pengambilan keputusan *Dynamic Difficulty Adjustment* (DDA) guna menyesuaikan kesulitan soal kuis sastra secara otomatis sesuai kemampuan adaptif siswa.
-
-Dengan pendekatan terpadu ini, Litera-AI App menjamin pengalaman belajar literasi sastra yang terasa personal, adaptif, dan menyenangkan tanpa melupakan kendala koneksi internet di lapangan melalui sistem *offline-first storage* yang tangguh.
+### Mengapa Monorepo?
+Untuk menjaga konsistensi tipe data, kecepatan sinkronisasi REST API, dan kemudahan deployment, seluruh komponen seluler, backend, dan AI disatukan dalam struktur repositori tunggal ini. Ini mempermudah tim pengembang melakukan pengujian integrasi (integration testing) secara simultan antara klien seluler Dart/Flutter dengan API server berbasis Python/FastAPI.
 
 ---
 
-## 📂 Struktur Monorepo (Workspace Architecture)
+## 📂 2. Struktur Workspace & Penjelasan Modul (Workspace Structure)
 
 ```text
 apps/
-  ├── mobile/         # Aplikasi seluler berbasis Flutter (Dart)
-  ├── backend/        # RESTful API Backend berbasis FastAPI (Python)
-  └── ai/             # Modul klasifikasi kognitif & pembuatan keputusan DDA (Python)
-docs/                 # Dokumentasi diagram alur, API OpenAPI, ERD Database, & strategi pengujian
-infra/                # Konfigurasi orkestrasi Docker Compose dan reverse proxy Nginx
+  ├── mobile/         # Klien aplikasi seluler lintas platform (Flutter)
+  ├── backend/        # RESTful API Backend asinkron (FastAPI)
+  └── ai/             # Modul penalaran keputusan kognitif & DDA (Python)
+docs/                 # Spesifikasi ERD database, OpenAPI, arsitektur, & panduan desain
+infra/                # Berkas konfigurasi deployment Docker Compose & Nginx
 ```
 
-### 📐 Arsitektur Sistem (System Architecture)
+---
+
+## 📱 3. Modul Klien Seluler (Flutter Mobile Client Detail)
+
+Aplikasi mobile Litera-AI didesain sebagai media belajar interaktif siswa dengan fitur-fitur teknis utama sebagai berikut:
+
+### A. Arsitektur & Manajemen State (State Management)
+* Mengadopsi arsitektur berbasis fitur (feature-first architecture) untuk memisahkan domain data, domain bisnis (domain entities), dan layer presentasi UI.
+* **State Management**: Sepenuhnya dikelola menggunakan **Riverpod** (Notifier & AsyncNotifier) untuk menghasilkan alur data satu arah (unidirectional data flow) yang reaktif, bersih, mudah diuji, dan aman dari memory leaks.
+* **Routing**: Menggunakan **GoRouter** dengan perlindungan hak akses halaman (route authentication guards). Siswa yang belum melengkapi profil kognitif awal akan secara otomatis diarahkan ke halaman asesmen diagnostik terlebih dahulu sebelum masuk ke dashboard utama.
+
+### B. Penyimpanan Offline-First & Antrean Sinkronisasi (Offline-First Storage)
+* **Hive Database**: Menggunakan database NoSQL lokal Hive yang sangat cepat untuk melakukan caching seluruh koleksi novel sastra klasik, riwayat membaca, dan modul kuis siswa secara lokal.
+* **Antrean Outbox Persisten (Offline Outbox Queue)**: Ketika murid mengerjakan tugas atau menjawab kuis saat koneksi internet terputus, seluruh jawaban disimpan sebagai antrean (*outbox task*) di lokal.
+* **Synchronization Worker**: Begitu terdeteksi koneksi internet kembali aktif (`NetworkStatusBanner`), aplikasi secara otomatis memproses antrean tersebut ke API backend secara batch, serta memunculkan status sinkronisasi sukses ke pengguna secara real-time.
+
+---
+
+## ⚡ 4. Modul Server API Backend (FastAPI Backend Detail)
+
+Backend Litera-AI dirancang untuk pemrosesan asinkron berkecepatan tinggi dengan fitur teknis sebagai berikut:
+
+### A. Teknologi API Server
+* **Asynchronous Engine**: Dibangun di atas **FastAPI** dengan runtime asinkron Python (`async/await`) untuk memproses ribuan request sinkronisasi data siswa secara paralel tanpa memblokir thread.
+* **Database ORM**: Menggunakan **SQLAlchemy 2.x** asinkron terhubung ke PostgreSQL, dengan kontrol migrasi skema tabel dinamis menggunakan **Alembic**.
+* **Caching & Session Manager**: Menggunakan **Redis** sebagai media caching data kuis yang sering diakses serta memvalidasi masa berlaku OTP.
+
+### B. Index Endpoint Backend Utama
+* `GET /api/v1/health` - Health check status koneksi database & redis cache.
+* `POST /api/v1/auth/register` - Registrasi akun murid dan pembuatan record profil awal.
+* `POST /api/v1/sync/batch` - Endpoint batch penerima sinkronisasi payload offline dari klien seluler.
+* `GET /api/v1/materials/digital-library` - Mengambil katalog novel sastra digital yang telah dioptimalkan kompresinya.
+* `GET /api/v1/monitoring/classroom-progress` - Rekap data keaktifan murid untuk dikirimkan ke web panel guru.
+
+---
+
+## 🤖 5. Modul Kecerdasan Buatan (Predictive AI Engine Detail)
+
+Modul AI Litera-AI terpisah dalam package independen untuk memudahkan deployment mikro/serverless:
+
+### A. Knowledge Tracing (KT)
+* Memprediksi peluang keberhasilan murid menjawab suatu kategori soal (misal: penafsiran majas, penjelasan kosakata arkais) berdasarkan data historis pengerjaan latihan mereka menggunakan model klasifikasi Bayesian kognitif sederhana.
+
+### B. Dynamic Difficulty Adjustment (DDA)
+* Algoritma penyesuaian kesulitan otomatis yang berjalan setiap siswa menyelesaikan satu sub-kuis:
+  - **Input**: Akurasi jawaban (%) dan durasi rata-rata pengerjaan soal.
+  - **Logika**: Jika akurasi > 85% dengan durasi cepat, tingkat kognitif soal berikutnya ditingkatkan. Jika akurasi < 50%, tingkat kognitif diturunkan (DDA Decision Tree).
+  - **Output**: ID set kuis berikutnya yang paling ideal dengan kondisi mental dan kompetensi siswa saat ini.
+
+---
+
+## 🚀 6. Panduan Instalasi Lengkap (Setup & Installation)
+
+### 💻 A. Menjalankan Aplikasi Mobile (Flutter)
+1. Buka folder mobile:
+   ```bash
+   cd apps/mobile
+   ```
+2. Ambil seluruh paket library Dart dependencies:
+   ```bash
+   flutter pub get
+   ```
+3. Pastikan emulator Android/iOS Anda aktif, lalu jalankan aplikasi:
+   ```bash
+   flutter run
+   ```
+
+### ⚡ B. Menjalankan Backend API (FastAPI) Secara Lokal
+1. Pindah ke direktori backend dan buat virtual environment Python:
+   ```bash
+   cd apps/backend
+   python -m venv .venv
+   source .venv/bin/activate  # OS Windows: .venv\Scripts\activate
+   ```
+2. Instal package backend beserta dependensi development:
+   ```bash
+   pip install -e ".[dev]"
+   ```
+3. Konfigurasikan file environment `.env` di dalam folder backend:
+   ```env
+   DATABASE_URL="postgresql+asyncpg://postgres:postgres123@localhost:5432/litera_backend_db"
+   REDIS_URL="redis://localhost:6379/0"
+   ```
+4. Jalankan server lokal:
+   ```bash
+   uvicorn app.main:app --reload
+   ```
+
+### 🐳 C. Deployment Menggunakan Docker Compose (Sangat Direkomendasikan)
+Untuk menjalankan seluruh ekosistem backend, database PostgreSQL, Redis, dan reverse proxy Nginx secara instan di server produksi atau lokal:
+```bash
+cd infra/docker
+docker-compose up -d --build
+```
+
+---
+
+## 📐 7. Diagram Arsitektur Sistem (System Architecture Diagram)
+
+Alur integrasi asinkron antar komponen monorepo didokumentasikan dalam diagram arsitektur tingkat tinggi berikut:
 
 ```mermaid
 graph TD
@@ -58,60 +153,11 @@ graph TD
 
 ---
 
-## ✨ Fitur Utama Modul (Core Module Features)
+## 🎯 8. Kesimpulan & Rencana Masa Depan (Conclusion & Roadmap)
 
-### 📱 1. Aplikasi Mobile (Flutter Client)
-* **Desain Premium Material 3**: Tema warna yang disesuaikan secara harmonis (Emerald & Light-Dark mode support) untuk menjaga kenyamanan mata siswa saat membaca dalam durasi lama.
-* **Offline-First Mode & Sync Banner**: Penyimpanan lokal menggunakan **Hive database** dengan sistem antrian outbox yang persisten. Siswa tetap dapat membaca dan mengerjakan tugas saat offline, dan aplikasi secara otomatis melakukan sinkronisasi data saat mendeteksi internet aktif kembali.
-* **Siklus Belajar Adaptif**: Menampilkan perjalanan belajar siswa (*learning paths*), kuis dinamis, papan peringkat gamifikasi (leaderboards), serta riwayat membaca personal.
+**LITERA-AI Monorepo** menyatukan kecepatan pengembangan lintas platform Flutter, kestabilan pemrosesan data asinkron FastAPI, serta akurasi klasifikasi mesin AI ke dalam sebuah kesatuan kode yang modular. Ekosistem ini tidak hanya tangguh dalam menghadapi variabilitas koneksi internet berkat skema *offline-first storage* yang solid, namun juga menjamin keandalan pengolahan data kognitif literasi siswa demi memajukan mutu pendidikan di Indonesia.
 
-### ⚡ 2. Backend API (FastAPI Server)
-* **Pemrosesan Asinkron Asli**: Memaksimalkan kecepatan respons dengan *async/await* Python melalui SQLAlchemy ORM.
-* **Sinkronisasi Endpoint Efisien**: Menerima data payload dari antrian mobile secara batch untuk meminimalkan beban bandwidth seluler.
-* **Arsitektur Skalabel**: Migrasi otomatis schema database menggunakan Alembic.
-
-### 🤖 3. Mesin Evaluasi AI (Predictive AI Engine)
-* **Diagnostik Profil Kognitif**: Menilai level literasi siswa pasca pengerjaan asesmen awal.
-* **Dynamic Difficulty Adjustment (DDA)**: Mengatur parameter tingkat kesulitan kuis berikutnya secara real-time berdasarkan akurasi dan durasi pengerjaan soal siswa sebelumnya.
-
----
-
-## 🚀 Panduan Menjalankan Layanan (Execution Guide)
-
-### 📱 1. Aplikasi Mobile (Flutter)
-```bash
-cd apps/mobile
-flutter pub get
-flutter run
-```
-
-### ⚡ 2. Backend Server (FastAPI)
-1. Salin konfigurasi environment di `apps/backend/` dan sesuaikan nilainya:
-   ```env
-   DATABASE_URL="postgresql+asyncpg://postgres:postgres@localhost:5432/litera_backend"
-   REDIS_URL="redis://localhost:6379/0"
-   ```
-2. Setup environment Python dan jalankan server:
-   ```bash
-   cd apps/backend
-   python -m venv .venv
-   source .venv/bin/activate  # Windows: .venv\Scripts\activate
-   pip install -e ".[dev]"
-   uvicorn app.main:app --reload
-   ```
-
-### 🐳 3. Menjalankan via Docker Compose (Rekomendasi Produksi)
-Orkestrasikan database PostgreSQL, Redis Cache, Backend API, dan reverse proxy Nginx dengan satu perintah:
-```bash
-cd infra/docker
-docker-compose up -d --build
-```
-Layanan backend akan secara otomatis terekspos dengan aman melalui reverse proxy Nginx pada port yang ditentukan.
-
----
-
-## 🎯 Kesimpulan & Kontribusi (Conclusion & Vision)
-
-**LITERA-AI Monorepo** menggabungkan portabilitas tinggi Flutter dengan kecepatan pemrosesan data asinkron FastAPI dan ketepatan prediksi kecerdasan buatan. Integrasi erat antar komponen dalam monorepo ini memastikan pemeliharaan kode (code maintenance) dan siklus integrasi/pengembangan berkelanjutan (CI/CD) berjalan dengan sangat efisien. 
-
-Proyek ini diharapkan mampu berkontribusi nyata dalam menghapus hambatan akses pendidikan, menyajikan asisten belajar sastra berkualitas tinggi yang gratis bagi seluruh siswa di Indonesia, serta mendukung pendidik dalam merancang pembelajaran berbasis data yang tepat sasaran.
+### 📌 Peta Jalan Masa Depan (Monorepo Roadmap):
+* **Fase 1 (Selesai)**: Struktur monorepo modular, implementasi Hive local storage dengan sync queue worker di Flutter, API Endpoint asinkron FastAPI, dan decision logic DDA AI.
+* **Fase 2 (Dalam Pengembangan)**: Implementasi penuh orkestrasi Docker Compose dan setup CI/CD GitHub Actions otomatis ke server uji coba.
+* **Fase 3 (Mendatang)**: Integrasi Speech-to-Text berbasis AI di mobile client guna mendukung asesmen membaca nyaring secara interaktif langsung pada perangkat Android dan iOS.
