@@ -159,5 +159,5 @@ graph TD
 
 ### 📌 Peta Jalan Masa Depan (Monorepo Roadmap):
 * **Fase 1 (Selesai)**: Struktur monorepo modular, implementasi Hive local storage dengan sync queue worker di Flutter, API Endpoint asinkron FastAPI, dan decision logic DDA AI.
-* **Fase 2 (Dalam Pengembangan)**: Implementasi penuh orkestrasi Docker Compose dan setup CI/CD GitHub Actions otomatis ke server uji coba.
+* **Fase 2 (Selesai)**: Implementasi penuh orkestrasi Docker Compose dan setup CI/CD GitHub Actions (`ci.yml` & `release.yml` untuk pembuatan APK otomatis saat rilis).
 * **Fase 3 (Mendatang)**: Integrasi Speech-to-Text berbasis AI di mobile client guna mendukung asesmen membaca nyaring secara interaktif langsung pada perangkat Android dan iOS.
